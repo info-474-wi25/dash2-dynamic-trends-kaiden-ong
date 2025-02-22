@@ -29,12 +29,31 @@ d3.csv("weather.csv").then(data => {
     const formatMonthYear = d3.timeFormat("%B-%Y");
 
     data.forEach(d => {
-        d.date = parseDate(d.date);
-        d["month-year"] = formatMonthYear(d.date);
-        d.actual_precipitation = +d.actual_precipitation; // Ensure this is a number
+        // d.date = parseDate(d.date);
+        d["month-year"] = formatMonthYear(parseDate(d.date));
     });
 
+    const numericColumns = ["actual_max_temp", "actual_mean_temp", "actual_min_temp",
+        "actual_precipitation", "average_max_temp", "average_min_temp", "average_precipitation",
+        "record_max_temp", "record_min_temp", "record_precipitation"];
+
+    data.forEach(d => {
+        numericColumns.forEach(col => {
+            d[col] = +d[col];
+        });
+    });
+
+    indianapolisData = data.filter(d => d.city === "Indianapolis");
+    indianapolisData = indianapolisData.map(d => ({
+        date: d.date,
+        high: +d.actual_max_temp,
+        avg: +d.actual_mean_temp,
+        low: +d.actual_min_temp
+    }))
+
     console.log("Parsed Data:", data);
+
+    console.log("Indianapolis Data:", indianapolisData);
 
     const nestedData = d3.group(data, d => d.city, d => d["month-year"]);
     const monthlyAverages = Array.from(nestedData, ([city, months]) => ({
