@@ -69,14 +69,15 @@ d3.csv("weather.csv").then(data => {
     console.log("Flat Data", flattenedData);
 
     indianapolisData = data.filter(d => d.city === "Indianapolis");
-    indianapolisData = indianapolisData.map(d => ({
-        date: d.date,
-        high: +d.actual_max_temp,
-        avg: +d.actual_mean_temp,
-        low: +d.actual_min_temp
+    const nestedIndyData = d3.group(indianapolisData, d => d["month-year"]);
+    indianapolisData = Array.from(nestedIndyData, ([months, records]) => ({
+        monthYear: months,
+        highAvg: Math.round(d3.mean(records, d => d.actual_max_temp) * 100) / 100,
+        meanAvg: Math.round(d3.mean(records, d => d.actual_mean_temp) * 100) / 100,
+        meanLow: Math.round(d3.mean(records, d => d.actual_min_temp) * 100) / 100
     }))
 
-    console.log("Parsed Data:", data);
+    // console.log("Parsed Data:", data);
 
     console.log("Indianapolis Data:", indianapolisData);
 
@@ -89,7 +90,6 @@ d3.csv("weather.csv").then(data => {
     const yScale = d3.scaleLinear()
     .domain([0, d3.max(flattenedData, d => d.avgPrecip)])
     .range([height, 0]);
-
 
     // 4.a: PLOT DATA FOR CHART 1
 
@@ -106,7 +106,16 @@ d3.csv("weather.csv").then(data => {
     // ==========================================
 
     // 3.b: SET SCALES FOR CHART 2
+    const parseMonthYear = d3.timeParse("%B-%Y");
 
+    indianapolisData.forEach(d => d.monthYear = parseMonthYear(d.monthYear));
+    const xScale2 = d3.scaleTime()
+        .domain(d3.extent(data, d => d.date))
+        .range([0, width]);
+
+    const yScale2 = d3.scaleLinear()
+        .domain([0, d3.max(indianapolisData, records => d3.max(records.values, d => d.highAvg))])
+        .range([height, 0]);
 
     // 4.b: PLOT DATA FOR CHART 2
 
