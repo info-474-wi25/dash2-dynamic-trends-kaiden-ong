@@ -30,7 +30,9 @@ d3.csv("weather.csv").then(data => {
 
     data.forEach(d => {
         // d.date = parseDate(d.date);
-        d["month-year"] = formatMonthYear(parseDate(d.date));
+        d.month = new Date(d.date).getMonth() + 1;
+        d.year = new Date(d.date).getFullYear();
+        d["month-year"] = new Date(d.year, d.month);
     });
 
     const numericColumns = ["actual_max_temp", "actual_mean_temp", "actual_min_temp",
@@ -42,6 +44,29 @@ d3.csv("weather.csv").then(data => {
             d[col] = +d[col];
         });
     });
+
+    const precipData = data;
+
+    const groupedData = d3.groups(precipData, d => d.city, d => d["month-year"])
+    .map(([city, monthyears]) => ({
+        city,
+        values: monthyears.map(([monthyear, entries]) => ({
+            monthyear,
+            avgPrecip: d3.mean(entries, e => e.actual_precipitation)
+        }))
+    }))
+
+    console.log("Grouped Data", groupedData);
+
+    const flattenedData = groupedData.flatMap(({ city, values }) => 
+        values.map(({ monthyear, avgPrecip}) => ({
+            monthyear,
+            avgPrecip,
+            city
+        }))
+    );
+
+    console.log("Flat Data", flattenedData);
 
     indianapolisData = data.filter(d => d.city === "Indianapolis");
     indianapolisData = indianapolisData.map(d => ({
@@ -55,30 +80,17 @@ d3.csv("weather.csv").then(data => {
 
     console.log("Indianapolis Data:", indianapolisData);
 
-    const nestedData = d3.group(data, d => d.city, d => d["month-year"]);
-    const monthlyAverages = Array.from(nestedData, ([city, months]) => ({
-        city,
-        values: Array.from(months, ([monthYear, records]) => ({
-            monthYear,
-            avgPrecipitation: d3.mean(records, d => d.actual_precipitation)
-        }))
-    }));
-    console.log(monthlyAverages);
+    
     // 3.a: SET SCALES FOR CHART 1
     const xScale = d3.scaleTime()
-        .domain(d3.extent(data, d => d.date))
-        .range([0, width]);
+    .domain(d3.extent(flattenedData, d => d["monthyear"]))
+    .range([0, width]);
 
     const yScale = d3.scaleLinear()
-        .domain([0, d3.max(monthlyAverages, city => d3.max(city.values, d => d.avgPrecipitation))])
-        .range([height, 0]);
+    .domain([0, d3.max(flattenedData, d => d.avgPrecip)])
+    .range([height, 0]);
 
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-        .domain(monthlyAverages.map(d => d.city));
 
-    const line = d3.line()
-        .x(d => xScale(parseDate(d.monthYear)))
-        .y(d => yScale(d.avgPrecipitation));
     // 4.a: PLOT DATA FOR CHART 1
 
     // 5.a: ADD AXES FOR CHART 1
