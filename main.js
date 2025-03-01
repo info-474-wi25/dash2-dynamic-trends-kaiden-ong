@@ -45,16 +45,15 @@ d3.csv("weather.csv").then(data => {
         });
     });
 
-    const precipData = data;
-
-    const groupedData = d3.groups(precipData, d => d.city, d => d["month-year"])
+    // Group data by city and month-year during the transformation
+    const groupedData = d3.groups(data, d => d.city, d => d["month-year"])
     .map(([city, monthyears]) => ({
         city,
         values: monthyears.map(([monthyear, entries]) => ({
             monthyear,
-            avgPrecip: d3.mean(entries, e => e.actual_precipitation)
+            avgPrecip: d3.mean(entries, e => e.average_precipitation)
         }))
-    }))
+    }));
 
     console.log("Grouped Data", groupedData);
 
@@ -92,13 +91,70 @@ d3.csv("weather.csv").then(data => {
     .domain([0, d3.max(flattenedData, d => d.avgPrecip)])
     .range([height, 0]);
 
+    const cities = Array.from(new Set(flattenedData.map(d => d.city)));
+    const colorScale = d3.scaleOrdinal()
+    .domain(cities)
+    .range(d3.schemeCategory10);
+
+
+    groupByCityData = d3.groups(flattenedData, d => d.city);
     // 4.a: PLOT DATA FOR CHART 1
+    const line = d3.line()
+    .x(d => xScale(d.monthyear)) // Use the xScale for the monthyear
+    .y(d => yScale(d.avgPrecip));
+    svg1_precipitation.selectAll("path")
+        .data(groupByCityData)
+        .enter()
+        .append("path")
+        .attr("d", ([city, values]) => line(values))
+        .style("stroke", ([city]) => colorScale(city))
+        .style("fill", "none")
+        .style("stroke-width", 1.5);
 
     // 5.a: ADD AXES FOR CHART 1
+    svg1_precipitation.append("g")
+    .attr("class", "x-axis")
+    .attr("transform", `translate(0, ${height})`)
+    .call(d3.axisBottom(xScale)
+        .ticks(d3.timeMonth.every(1)) // Set ticks to every month
+        .tickFormat(d3.timeFormat("%b %Y")));
+
+    svg1_precipitation.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale));
 
     // 6.a: ADD LABELS FOR CHART 1
 
+    svg1_precipitation.append("text")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 10)
+    .attr("text-anchor", "middle")
+    .text("Month-Year");
 
+    svg1_precipitation.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left + 20)
+    .attr("x", 0 - height / 2)
+    .attr("text-anchor", "middle")
+    .text("Average Precipitation (inches)");
+
+    const legend = svg1_precipitation.append("g")
+    .attr("class", "legend")
+    .attr("transform", "translate(20,20)");
+
+    cities.forEach((city, i) => {
+        legend.append("rect")
+            .attr("x", width - 250)
+            .attr("y", i * 20 - 15)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", colorScale(city));
+    
+        legend.append("text")
+            .attr("x", width - 200)
+            .attr("y", i * 20) 
+            .text(city);
+    });
     // 7.a: ADD INTERACTIVITY FOR CHART 1
     
 
