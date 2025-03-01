@@ -229,9 +229,9 @@ d3.csv("weather.csv").then(data => {
     .text("Temperature (°F)");
 
     const legend2 = svg2_temps.append("g")
-    .attr("transform", `translate(${width - 300},${margin.top})`); // Position the legend
+    .attr("transform", `translate(${width - 300},${margin.top})`);
 
-    measurements.forEach((measurement, i) => {
+    Array.from(measurements.keys()).forEach((measurement, i) => {
         legend2.append("rect")
             .attr("x", 0)
             .attr("y", i * 25)
@@ -244,7 +244,7 @@ d3.csv("weather.csv").then(data => {
             .attr("y", i * 25 + 14)
             .text(measurement)
             .style("alignment-baseline", "middle");
-    });
+});
 
 
     // 7.b: ADD INTERACTIVITY FOR CHART 2
