@@ -70,6 +70,7 @@ d3.csv("weather.csv").then(data => {
 
     indianapolisData = data.filter(d => d.city === "Indianapolis");
     const nestedIndyData = d3.group(indianapolisData, d => d["month-year"]);
+    console.log("Nested", nestedIndyData)
     indianapolisData = Array.from(nestedIndyData, ([months, records]) => ({
         monthYear: months,
         highAvg: Math.round(d3.mean(records, d => d.actual_max_temp) * 100) / 100,
