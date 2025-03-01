@@ -11,7 +11,7 @@ const svg1_precipitation = d3.select("#lineChart1") // If you change this ID, yo
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-const svg2_RENAME = d3.select("#lineChart2")
+const svg2_temps = d3.select("#lineChart2")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -34,7 +34,7 @@ d3.csv("weather.csv").then(data => {
         d.year = new Date(d.date).getFullYear();
         d["month-year"] = new Date(d.year, d.month);
     });
-
+    
     const numericColumns = ["actual_max_temp", "actual_mean_temp", "actual_min_temp",
         "actual_precipitation", "average_max_temp", "average_min_temp", "average_precipitation",
         "record_max_temp", "record_min_temp", "record_precipitation"];
@@ -67,19 +67,35 @@ d3.csv("weather.csv").then(data => {
 
     console.log("Flat Data", flattenedData);
 
-    indianapolisData = data.filter(d => d.city === "Indianapolis");
-    const nestedIndyData = d3.group(indianapolisData, d => d["month-year"]);
-    console.log("Nested", nestedIndyData)
-    indianapolisData = Array.from(nestedIndyData, ([months, records]) => ({
-        monthYear: months,
-        highAvg: Math.round(d3.mean(records, d => d.actual_max_temp) * 100) / 100,
-        meanAvg: Math.round(d3.mean(records, d => d.actual_mean_temp) * 100) / 100,
-        meanLow: Math.round(d3.mean(records, d => d.actual_min_temp) * 100) / 100
+    indyData = data.filter(d => d.city === "Indianapolis");
+    indyGrouped = d3.groups(indyData, d => d["month-year"])
+    .map(([monthyear, entries]) => ({
+        monthyear,
+        maxTemp: d3.mean(entries, e => e.actual_max_temp),
+        avgTemp: d3.mean(entries, e => e.actual_mean_temp),
+        minTemp: d3.mean(entries, e => e.actual_min_temp)
     }))
 
-    // console.log("Parsed Data:", data);
+    console.log("Indianapolis Flat Data:", indyGrouped);
 
-    console.log("Indianapolis Data:", indianapolisData);
+    const indyPivot = indyGrouped.flatMap(({ monthyear, maxTemp, avgTemp, minTemp }) => [
+        {   
+            monthyear,
+            temp: maxTemp,
+            measurement: "Max" },
+        {
+            monthyear,
+            temp: avgTemp,
+            measurement: "Average"
+        },
+        {
+            monthyear,
+            temp: minTemp,
+            measurement: "Min"
+        }
+    ]);
+    
+    console.log("Indy Pivot", indyPivot)
 
     
     // 3.a: SET SCALES FOR CHART 1
@@ -163,24 +179,72 @@ d3.csv("weather.csv").then(data => {
     // ==========================================
 
     // 3.b: SET SCALES FOR CHART 2
-    const parseMonthYear = d3.timeParse("%B-%Y");
-
-    indianapolisData.forEach(d => d.monthYear = parseMonthYear(d.monthYear));
     const xScale2 = d3.scaleTime()
-        .domain(d3.extent(data, d => d.date))
-        .range([0, width]);
+    .domain(d3.extent(indyPivot, d => new Date(d.monthyear)))
+    .range([margin.left, width - margin.right]);
 
     const yScale2 = d3.scaleLinear()
-        .domain([0, d3.max(indianapolisData, records => d3.max(records.values, d => d.highAvg))])
-        .range([height, 0]);
-
+    .domain(d3.extent(indyPivot, d => d.temp))
+    .range([height - margin.bottom, margin.top]);
     // 4.b: PLOT DATA FOR CHART 2
+    const measurements = d3.group(indyPivot, d => d.measurement);
 
+    const line2 = d3.line()
+    .x(d => xScale2(new Date(d.monthyear)))
+    .y(d => yScale2(d.temp));
+
+    svg2_temps.selectAll(".line")
+    .data(measurements)
+    .enter()
+    .append("path")
+    .attr("class", "line")
+    .attr("d", ([, values]) => line2(values))
+    .attr("fill", "none")
+    .attr("stroke", (d, i) => d3.schemeCategory10[i]);
 
     // 5.b: ADD AXES FOR CHART 
+    const xAxis = d3.axisBottom(xScale2).tickFormat(d3.timeFormat("%b %Y"));
+    const yAxis = d3.axisLeft(yScale2);
 
+    svg2_temps.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(xAxis);
+
+    svg2_temps.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(yAxis);
 
     // 6.b: ADD LABELS FOR CHART 2
+    svg2_temps.append("text")
+    .attr("x", width / 2)
+    .attr("y", height - margin.bottom / 2 + 20)
+    .attr("text-anchor", "middle")
+    .text("Month-Year");
+
+    svg2_temps.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", margin.left / 2)
+    .attr("text-anchor", "middle")
+    .text("Temperature (°F)");
+
+    const legend2 = svg2_temps.append("g")
+    .attr("transform", `translate(${width - 300},${margin.top})`); // Position the legend
+
+    measurements.forEach((measurement, i) => {
+        legend2.append("rect")
+            .attr("x", 0)
+            .attr("y", i * 25)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", d3.schemeCategory10[i]);
+
+        legend2.append("text")
+            .attr("x", 25)
+            .attr("y", i * 25 + 14)
+            .text(measurement)
+            .style("alignment-baseline", "middle");
+    });
 
 
     // 7.b: ADD INTERACTIVITY FOR CHART 2
