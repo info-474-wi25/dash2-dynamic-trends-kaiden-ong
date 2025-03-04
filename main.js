@@ -290,10 +290,55 @@ d3.csv("weather.csv").then(data => {
             .attr("y", i * 25 + 14)
             .text(measurement)
             .style("alignment-baseline", "middle");
-});
+    });
 
 
     // 7.b: ADD INTERACTIVITY FOR CHART 2
+    const checkbox = d3.select("#points");
 
+    function updatePoints() {
+        const showPoints = checkbox.property("checked");
 
+        const dots = svg2_temps.selectAll(".dot")
+            .data(showPoints ? indyPivot : []);
+
+        const tooltip = d3.select("body").append("div")  
+        .attr("class", "tooltip")  
+        .style("position", "absolute")  
+        .style("background", "white")  
+        .style("border", "1px solid black")  
+        .style("padding", "5px")  
+        .style("display", "none"); 
+
+        dots.enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => xScale2(new Date(d.monthyear)))
+            .attr("cy", d => yScale2(d.temp))
+            .attr("r", 3)
+            .attr("fill", d => d3.schemeCategory10[Array.from(measurements.keys()).indexOf(d.measurement)]) // Match line color
+            .on("mouseover", (event, d) => {  
+                tooltip.style("display", "block")
+                    .html(`Date: ${d3.timeFormat("%b %Y")(new Date(d.monthyear))}<br>Temp: ${d.temp}°F`)
+                    .style("left", `${event.pageX + 10}px`)
+                    .style("top", `${event.pageY - 20}px`);
+            })
+            .on("mouseout", () => tooltip.style("display", "none"))
+            .merge(dots)
+            .attr("display", showPoints ? "block" : "none");
+    
+        dots.exit().remove();
+    }
+    
+    checkbox.on("change", updatePoints);
+    
+    updatePoints();
+
+    svg2_temps.selectAll(".line")
+    .on("mouseover", function () {
+        d3.select(this).style("stroke-width", "6px");
+    })
+    .on("mouseout", function () {
+        d3.select(this).style("stroke-width", "2px");
+    });
 });
