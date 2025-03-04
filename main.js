@@ -25,9 +25,7 @@ const svg2_temps = d3.select("#lineChart2")
 d3.csv("weather.csv").then(data => {
     // 2.b: ... AND TRANSFORM DATA
     console.log(data);
-    const parseDate = d3.timeParse("%m/%d/%Y");
-    const formatMonthYear = d3.timeFormat("%B-%Y");
-
+    
     data.forEach(d => {
         // d.date = parseDate(d.date);
         d.month = new Date(d.date).getMonth() + 1;
@@ -122,6 +120,7 @@ d3.csv("weather.csv").then(data => {
         .data(groupByCityData)
         .enter()
         .append("path")
+        .attr("class", "city-line")
         .attr("d", ([city, values]) => line(values))
         .style("stroke", ([city]) => colorScale(city))
         .style("fill", "none")
@@ -172,7 +171,54 @@ d3.csv("weather.csv").then(data => {
             .text(city);
     });
     // 7.a: ADD INTERACTIVITY FOR CHART 1
-    
+    function updateChart(selectedCity) {
+        var selectedData = flattenedData;
+        if(selectedCity !== "All") {
+            selectedData = flattenedData.filter(function(d) {
+                return d.city === selectedCity;
+            })
+        }
+        var groupSelectData = d3.groups(selectedData, d => d.city);
+
+        // Only remove the paths with class "city-line"
+        svg1_precipitation.selectAll("path.city-line").remove();
+
+        // Update the paths
+        svg1_precipitation.selectAll("path.city-line")
+            .data(groupSelectData)
+            .enter()
+            .append("path")
+            .attr("class", "city-line")  // Add this class
+            .attr("d", ([city, values]) => line(values))
+            .style("stroke", ([city]) => colorScale(city))
+            .style("fill", "none")
+            .style("stroke-width", 1.5);
+
+        // Update the legend
+        legend.selectAll("rect").remove();
+        legend.selectAll("text").remove();
+
+        const visibleCities = selectedCity === "All" ? cities : [selectedCity];
+        
+        visibleCities.forEach((city, i) => {
+            legend.append("rect")
+                .attr("x", width - 250)
+                .attr("y", i * 20 - 15)
+                .attr("width", 18)
+                .attr("height", 18)
+                .style("fill", colorScale(city));
+        
+            legend.append("text")
+                .attr("x", width - 200)
+                .attr("y", i * 20) 
+                .text(city);
+        });
+    }
+
+    d3.select("#categorySelect").on("change", function() {
+        var selectedCity = d3.select(this).property("value");
+        updateChart(selectedCity);
+    })
 
     // ==========================================
     //         CHART 2 (if applicable)

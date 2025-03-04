@@ -11,6 +11,14 @@ body {
     background-color: #f4f4f4;
 }
 
+.select-container select {
+    width: 50%;
+    border-radius: 15px;
+    padding-left: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
 /* Vertical Container Layout */
 .vertical-container {
     display: flex;
