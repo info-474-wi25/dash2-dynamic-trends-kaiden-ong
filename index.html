@@ -17,9 +17,9 @@
     
     <!-- INTERACTIVE WIDGETS -->
     <div class="item horizontal-container">
-        <div class="item"><!-- Your widget 1 code goes here. -->
+        <div class="item chart1-interactive"><!-- Your widget 1 code goes here. -->
             <!-- Widget 1 title -->
-            <label for="categorySelect">Select City:</label>
+            <label for="categorySelect">Select Different Cities to View Precipitation Levels:</label>
             <!-- Widget 1 element -->
             <div class="select-container">
                 <select id="categorySelect">
@@ -37,10 +37,11 @@
         </div>
 
         <!-- DELETE THE FOLLOWING DIV IF YOU ONLY HAVE 1 WIDGET. -->
-        <div class="item"><!-- Your widget 2 code goes here. -->
+        <div class="item chart2-interactive"><!-- Your widget 2 code goes here. -->
             <!-- Widget 2 title -->
             <!-- Widget 2 element -->
-            <label for="categorySelect">Show Points:</label> <input type="checkbox" id="points" value="false">                
+            <label for="categorySelect">Show Tooltip Points for Indianapolis Temperatures:</label>
+            <input type="checkbox" id="points" value="false">                
         </div>
     </div>
 
@@ -51,7 +52,7 @@
     </div>
     <!-- DELETE THE FOLLOWING DIV IF YOU ONLY HAVE 1 CHART. -->
     <div class="item chart-container">
-        <h2>Monthly High, Avg & Low Temps in Indianapolis</h2>
+        <h2>Monthly Max, Average & Min Temperatures in Indianapolis</h2>
         <svg id="lineChart2" width="900" height="400"></svg>
     </div>
     <script src="main.js"></script>

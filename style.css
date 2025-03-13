@@ -11,6 +11,20 @@ body {
     background-color: #f4f4f4;
 }
 
+.chart1-interactive {
+    text-align: center;
+}
+
+.chart2-interactive {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart2-interactive input {
+    margin-top: 5px;
+}
+
 .select-container select {
     width: 50%;
     border-radius: 15px;

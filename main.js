@@ -290,7 +290,7 @@ d3.csv("weather.csv").then(data => {
             .attr("y", i * 25 + 14)
             .text(measurement)
             .style("alignment-baseline", "middle");
-    });
+});
 
 
     // 7.b: ADD INTERACTIVITY FOR CHART 2
@@ -319,7 +319,7 @@ d3.csv("weather.csv").then(data => {
             .attr("fill", d => d3.schemeCategory10[Array.from(measurements.keys()).indexOf(d.measurement)]) // Match line color
             .on("mouseover", (event, d) => {  
                 tooltip.style("display", "block")
-                    .html(`Date: ${d3.timeFormat("%b %Y")(new Date(d.monthyear))}<br>Temp: ${d.temp}°F`)
+                    .html(`Date: ${d3.timeFormat("%b %Y")(new Date(d.monthyear))}<br>Temp: ${d.temp.toFixed(2)}°F`)
                     .style("left", `${event.pageX + 10}px`)
                     .style("top", `${event.pageY - 20}px`);
             })
@@ -330,6 +330,19 @@ d3.csv("weather.csv").then(data => {
         dots.exit().remove();
     }
     
+    
+    checkbox.on("change", updatePoints);
+    
+    updatePoints();
+
+    svg2_temps.selectAll(".line")
+    .on("mouseover", function () {
+        d3.select(this).style("stroke-width", "6px");
+    })
+    .on("mouseout", function () {
+        d3.select(this).style("stroke-width", "2px");
+    });
+
     checkbox.on("change", updatePoints);
     
     updatePoints();
