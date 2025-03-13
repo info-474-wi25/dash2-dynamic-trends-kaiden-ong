@@ -227,7 +227,7 @@ d3.csv("weather.csv").then(data => {
     // 3.b: SET SCALES FOR CHART 2
     const xScale2 = d3.scaleTime()
     .domain(d3.extent(indyPivot, d => new Date(d.monthyear)))
-    .range([margin.left, width - margin.right]);
+    .range([margin.left - 70, width - margin.right]);
 
     const yScale2 = d3.scaleLinear()
     .domain(d3.extent(indyPivot, d => d.temp))
@@ -257,7 +257,7 @@ d3.csv("weather.csv").then(data => {
     .call(xAxis);
 
     svg2_temps.append("g")
-    .attr("transform", `translate(${margin.left},0)`)
+    .attr("transform", `translate(${margin.left - 70},0)`)
     .call(yAxis);
 
     // 6.b: ADD LABELS FOR CHART 2
@@ -270,7 +270,7 @@ d3.csv("weather.csv").then(data => {
     svg2_temps.append("text")
     .attr("transform", "rotate(-90)")
     .attr("x", -height / 2)
-    .attr("y", margin.left / 2)
+    .attr("y", margin.left / 2 - 70)
     .attr("text-anchor", "middle")
     .text("Temperature (°F)");
 
@@ -290,7 +290,7 @@ d3.csv("weather.csv").then(data => {
             .attr("y", i * 25 + 14)
             .text(measurement)
             .style("alignment-baseline", "middle");
-});
+    });
 
 
     // 7.b: ADD INTERACTIVITY FOR CHART 2
@@ -319,7 +319,7 @@ d3.csv("weather.csv").then(data => {
             .attr("fill", d => d3.schemeCategory10[Array.from(measurements.keys()).indexOf(d.measurement)]) // Match line color
             .on("mouseover", (event, d) => {  
                 tooltip.style("display", "block")
-                    .html(`Date: ${d3.timeFormat("%b %Y")(new Date(d.monthyear))}<br>Temp: ${d.temp.toFixed(2)}°F`)
+                    .html(`Date: ${d3.timeFormat("%b %Y")(new Date(d.monthyear))}<br>Temp: ${d.temp}°F`)
                     .style("left", `${event.pageX + 10}px`)
                     .style("top", `${event.pageY - 20}px`);
             })
@@ -330,19 +330,6 @@ d3.csv("weather.csv").then(data => {
         dots.exit().remove();
     }
     
-    
-    checkbox.on("change", updatePoints);
-    
-    updatePoints();
-
-    svg2_temps.selectAll(".line")
-    .on("mouseover", function () {
-        d3.select(this).style("stroke-width", "6px");
-    })
-    .on("mouseout", function () {
-        d3.select(this).style("stroke-width", "2px");
-    });
-
     checkbox.on("change", updatePoints);
     
     updatePoints();
